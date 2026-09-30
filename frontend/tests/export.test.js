@@ -1,4 +1,3 @@
-/* eslint-env node */
 import assert from 'assert';
 
 function getExportFilename(groupFilter, dateStr) {
@@ -34,5 +33,6 @@ try {
   console.log('All export.test.js tests passed!');
 } catch (err) {
   console.error('Test failed:', err);
+  // eslint-disable-next-line no-undef
   process.exit(1);
 }

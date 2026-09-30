@@ -8,7 +8,6 @@ import AutoLogoutModal from './AutoLogoutModal';
 export default function AppShell({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { logout } = useAuth();
   const { showModal, timeLeft, stayLoggedIn } = useInactivityTimer();
 
   const [prevLocation, setPrevLocation] = useState(location.pathname);
