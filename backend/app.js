@@ -14,13 +14,28 @@ app.use(compression());
 app.use(cors({ origin: config.CORS_ORIGIN }));
 app.use(express.json({ limit: '1mb' }));
 
+// Rate limiter for everything except health check
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.path === '/api/health' || req.path === '/health',
 });
 app.use(limiter);
+
+const authRoutes = require('./routes/auth');
+const requireAuth = require('./middleware/auth');
+
+app.use('/api/auth', authRoutes);
+
+// Protect all other /api/* except /api/health and /api/auth/*
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health' || req.path.startsWith('/auth/')) {
+    return next();
+  }
+  return requireAuth(req, res, next);
+});
 
 app.use('/', routes);
 

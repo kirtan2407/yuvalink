@@ -1,27 +1,59 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const token = sessionStorage.getItem('token');
-    return token ? { id: 1, role: 'admin' } : null;
-  });
-  const [loading] = useState(false);
+  const [token, setToken] = useState(() => sessionStorage.getItem('token'));
+  const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+  const [loading, setLoading] = useState(!!token);
+  const [autoLogoutMinutes] = useState(30);
 
-  const login = (token, userData) => {
-    sessionStorage.setItem('token', token);
-    setUser(userData);
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          sessionStorage.removeItem('token');
+          setToken(null);
+          setIsAuthenticated(false);
+        }
+      } catch {
+        sessionStorage.removeItem('token');
+        setToken(null);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+    verifyToken();
+  }, [token]);
+
+  const login = (newToken) => {
+    sessionStorage.setItem('token', newToken);
+    setToken(newToken);
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
     sessionStorage.removeItem('token');
-    setUser(null);
+    setToken(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ token, login, logout, isAuthenticated, loading, autoLogoutMinutes }}>
+      {children}
     </AuthContext.Provider>
   );
 }

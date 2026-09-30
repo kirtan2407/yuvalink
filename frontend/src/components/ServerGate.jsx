@@ -13,12 +13,13 @@ export default function ServerGate({ children }) {
       try {
         await apiCall('/api/health');
         setIsAwake(true);
-      } catch {
+      } catch (err) {
+        console.error(`Ping attempt ${attempt} failed:`, err);
         if (attempt < 5) {
           const backoff = Math.min(1000 * Math.pow(2, attempt), 10000);
           timeoutId = setTimeout(() => pingServer(attempt + 1), backoff);
         } else {
-          setError('Could not connect to the server. Please try again later.');
+          setError('Could not connect to the server. Please try again later. Check console for details.');
         }
       }
     };
