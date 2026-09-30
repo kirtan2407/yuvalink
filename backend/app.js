@@ -40,6 +40,9 @@ app.use('/api', (req, res, next) => {
 const attendanceRoutes = require('./routes/attendance');
 app.use('/api/attendance', attendanceRoutes);
 
+const importRoutes = require('./routes/import');
+app.use('/api/import', importRoutes);
+
 app.use('/', routes);
 
 app.use((req, res, next) => {
