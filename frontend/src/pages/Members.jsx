@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { useMembers } from '../context/MembersContext';
 import MemberFormModal from '../components/MemberFormModal';
+import ImportMembers from '../components/ImportMembers';
 import { filterMembers } from '../utils/memberUtils';
 
 export default function Members() {
@@ -60,6 +64,65 @@ export default function Members() {
     return Math.abs(new Date(diff).getUTCFullYear() - 1970);
   };
 
+  const exportFilename = () => {
+    const d = new Date().toISOString().split('T')[0];
+    const grp = groupFilter === 'All' ? 'All' : groupFilter;
+    return `YuvaLink_Members_Group-${grp}_${d}`;
+  };
+
+  const handleExportExcel = () => {
+    if (filteredMembers.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+    const wsData = filteredMembers.map(m => ({
+      Name: m.name,
+      Group: m.group || 'Unassigned',
+      Mobile: m.mobile,
+      Address: m.address || '',
+      Study: m.currentStudy || m.study || '',
+      Occupation: m.occupation || '',
+      Age: m.birthDate ? calculateAge(m.birthDate) : ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Members');
+    XLSX.writeFile(wb, `${exportFilename()}.xlsx`);
+  };
+
+  const handleExportPDF = () => {
+    if (filteredMembers.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+    const doc = new jsPDF('landscape');
+    
+    doc.setFontSize(18);
+    doc.text("YuvaLink Members", 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Group: ${groupFilter === 'All' ? 'All' : groupFilter} | Total: ${filteredMembers.length} | Date: ${new Date().toISOString().split('T')[0]}`, 14, 30);
+    
+    const tableData = filteredMembers.map(m => [
+      m.name,
+      m.group || 'Unassigned',
+      m.mobile,
+      m.address || '',
+      m.currentStudy || m.study || '',
+      m.occupation || '',
+      m.birthDate ? calculateAge(m.birthDate) : ''
+    ]);
+    
+    doc.autoTable({
+      startY: 36,
+      head: [['Name', 'Group', 'Mobile', 'Address', 'Study', 'Occupation', 'Age']],
+      body: tableData,
+      styles: { font: 'helvetica' },
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+    
+    doc.save(`${exportFilename()}.pdf`);
+  };
+
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
   };
@@ -74,8 +137,14 @@ export default function Members() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h1 style={{ margin: 0 }}>Members</h1>
-        <button onClick={handleAddClick} style={btnPrimary}>Add Member</button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={handleExportExcel} style={btnSecondary} disabled={filteredMembers.length === 0}>Export Excel</button>
+          <button onClick={handleExportPDF} style={btnSecondary} disabled={filteredMembers.length === 0}>Export PDF</button>
+          <button onClick={handleAddClick} style={btnPrimary}>Add Member</button>
+        </div>
       </div>
+
+      <ImportMembers onImportComplete={() => window.location.reload()} />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
         <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
@@ -232,6 +301,15 @@ const btnPrimary = {
   backgroundColor: '#3b82f6',
   color: 'white',
   border: 'none',
+  borderRadius: '0.375rem',
+  cursor: 'pointer'
+};
+
+const btnSecondary = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#f3f4f6',
+  color: '#374151',
+  border: '1px solid #d1d5db',
   borderRadius: '0.375rem',
   cursor: 'pointer'
 };

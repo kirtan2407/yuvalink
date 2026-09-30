@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { useMembers } from '../context/MembersContext';
 
 export default function Report() {
@@ -72,6 +73,24 @@ export default function Report() {
     }
   };
 
+  const handleExportExcel = () => {
+    if (reportData.length === 0) return;
+    const wsData = reportData.map(r => ({
+      Name: r.name,
+      Group: r.group,
+      Mobile: r.mobile,
+      Total: r.total,
+      Present: r.present,
+      Absent: r.absent,
+      Percentage: r.percentage + '%'
+    }));
+    const ws = XLSX.utils.json_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+    const grp = groupFilter === 'All' ? 'All' : groupFilter;
+    XLSX.writeFile(wb, `YuvaLink_Attendance_Group-${grp}_${fromDate}_to_${toDate}.xlsx`);
+  };
+
   return (
     <div>
       <h1 style={{ marginBottom: '1rem' }}>Attendance Report</h1>
@@ -105,7 +124,10 @@ export default function Report() {
         </div>
         
         <div>
-          <button onClick={fetchReport} style={btnPrimary}>Generate Report</button>
+          <button onClick={fetchReport} style={btnPrimary} disabled={loading}>Generate Report</button>
+        </div>
+        <div>
+          <button onClick={handleExportExcel} style={btnSecondary} disabled={reportData.length === 0 || loading}>Export Excel</button>
         </div>
       </div>
 
@@ -214,4 +236,15 @@ const inputStyle = {
   height: '42px',
   boxSizing: 'border-box',
   width: '100%'
+};
+
+const btnSecondary = {
+  padding: '0.5rem 1rem',
+  backgroundColor: '#f3f4f6',
+  color: '#374151',
+  border: '1px solid #d1d5db',
+  borderRadius: '0.375rem',
+  cursor: 'pointer',
+  height: '42px',
+  fontWeight: 500
 };
