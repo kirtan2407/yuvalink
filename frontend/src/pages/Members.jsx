@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useMembers } from '../context/MembersContext';
 import MemberFormModal from '../components/MemberFormModal';
+import { filterMembers } from '../utils/memberUtils';
 
 export default function Members() {
   const { state, deleteMember, restoreMember } = useMembers();
@@ -8,10 +9,13 @@ export default function Members() {
   
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'satsang'
   const [showDeletedSatsang, setShowDeletedSatsang] = useState(false);
-  const [sortOrder, setSortOrder] = useState('name_asc'); // name_asc, name_desc, newest, oldest
+  const [sortOrder, setSortOrder] = useState('Name A-Z'); 
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+
+  const [groupFilter, setGroupFilter] = useState('All');
+  const [search, setSearch] = useState('');
 
   const handleAddClick = () => {
     setEditingMember(null);
@@ -47,22 +51,24 @@ export default function Members() {
       }
     }
 
-    list.sort((a, b) => {
-      if (sortOrder === 'name_asc') return (a.name || '').localeCompare(b.name || '');
-      if (sortOrder === 'name_desc') return (b.name || '').localeCompare(a.name || '');
-      if (sortOrder === 'newest') return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
-      if (sortOrder === 'oldest') return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
-      return 0;
-    });
-
-    return list;
-  }, [members, trashMembers, activeTab, showDeletedSatsang, sortOrder]);
+    return filterMembers(list, { group: groupFilter, search, sortOrder });
+  }, [members, trashMembers, activeTab, showDeletedSatsang, sortOrder, groupFilter, search]);
 
   const calculateAge = (dob) => {
     if (!dob) return '';
     const diff = Date.now() - new Date(dob).getTime();
     return Math.abs(new Date(diff).getUTCFullYear() - 1970);
   };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+  };
+
+  const clearSearch = () => setSearch('');
+  
+  const clearGroup = () => setGroupFilter('All');
+
+  const groups = ['All', 'Unassigned', ...Array.from({length: 26}, (_, i) => String.fromCharCode(65 + i))];
 
   return (
     <div>
@@ -71,19 +77,44 @@ export default function Members() {
         <button onClick={handleAddClick} style={btnPrimary}>Add Member</button>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          Total Members: {filteredMembers.length} of {activeTab === 'all' ? members.length : members.filter(m => m.addedInSatsangApp).length}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
+        <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+          <input 
+            type="text" 
+            placeholder="Type a single letter to filter by Group or search by name..." 
+            value={search} 
+            onChange={handleSearchChange}
+            style={{...inputStyle, width: '100%', boxSizing: 'border-box'}}
+          />
+          {search && (
+            <button onClick={clearSearch} style={{ position: 'absolute', right: '10px', top: '10px', background: 'transparent', border: 'none', cursor: 'pointer' }}>✕</button>
+          )}
         </div>
+        
+        <div>
+          <select value={groupFilter} onChange={e => setGroupFilter(e.target.value)} style={inputStyle}>
+            {groups.map(g => <option key={g} value={g}>{g === 'All' ? 'All Groups' : g === 'Unassigned' ? 'Unassigned' : `Group ${g}`}</option>)}
+          </select>
+        </div>
+
         <div>
           <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={inputStyle}>
-            <option value="name_asc">Name A-Z</option>
-            <option value="name_desc">Name Z-A</option>
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
+            <option value="Name A-Z">Name A-Z</option>
+            <option value="Name Z-A">Name Z-A</option>
+            <option value="Newest">Newest First</option>
+            <option value="Oldest">Oldest First</option>
           </select>
         </div>
       </div>
+      
+      {groupFilter !== 'All' && (
+        <div style={{ marginBottom: '1rem' }}>
+          <span style={{ padding: '0.25rem 0.5rem', backgroundColor: '#e0e7ff', color: '#4338ca', borderRadius: '999px', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            {groupFilter === 'Unassigned' ? 'Unassigned' : `Group ${groupFilter}`}
+            <button onClick={clearGroup} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: '#4338ca', fontSize: '1rem' }}>✕</button>
+          </span>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #d1d5db', marginBottom: '1rem' }}>
         <button 
@@ -113,9 +144,13 @@ export default function Members() {
         </div>
       )}
 
+      <div style={{ marginBottom: '1rem' }}>
+        Total Members: {filteredMembers.length}
+      </div>
+
       {filteredMembers.length === 0 ? (
         <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#fff', borderRadius: '0.5rem' }}>
-          No members added yet.
+          {groupFilter !== 'All' ? `No members in Group ${groupFilter}` : 'No members found.'}
         </div>
       ) : (
         <div className="table-responsive" style={{ overflowX: 'auto', backgroundColor: '#fff', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -154,16 +189,16 @@ export default function Members() {
                     <span style={{ 
                       padding: '0.25rem 0.5rem', 
                       borderRadius: '999px', 
-                      backgroundColor: m.group === 'Unassigned' ? '#f3f4f6' : '#e0e7ff',
-                      color: m.group === 'Unassigned' ? '#6b7280' : '#4338ca',
+                      backgroundColor: m.group === 'Unassigned' || !m.group ? '#f3f4f6' : '#e0e7ff',
+                      color: m.group === 'Unassigned' || !m.group ? '#6b7280' : '#4338ca',
                       fontSize: '0.875rem'
                     }}>
-                      {m.group === 'Unassigned' ? '—' : m.group}
+                      {!m.group || m.group === 'Unassigned' ? '—' : m.group}
                     </span>
                   </td>
                   <td data-label="Mobile">{m.mobile}</td>
                   <td data-label="Address">{m.address || '-'}</td>
-                  <td data-label="Study">{m.currentStudy || '-'}</td>
+                  <td data-label="Study">{m.currentStudy || m.study || '-'}</td>
                   <td data-label="Occupation">{m.occupation || '-'}</td>
                   <td data-label="Age">{m.birthDate ? calculateAge(m.birthDate) : '-'}</td>
                   <td data-label="Actions" style={{ display: 'flex', gap: '0.5rem' }}>
