@@ -6,11 +6,12 @@ import Login from './pages/Login';
 import AppShell from './components/AppShell';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import Members from './pages/Members';
+import Trash from './pages/Trash';
+
 // Placeholder Pages
-const Members = () => <div className="card"><h1>Members Page</h1></div>;
 const Attendance = () => <div className="card"><h1>Attendance Page</h1></div>;
 const Report = () => <div className="card"><h1>Report Page</h1></div>;
-const Trash = () => <div className="card"><h1>Trash Page</h1></div>;
 const Settings = () => <div className="card"><h1>Settings Page</h1></div>;
 
 function App() {
