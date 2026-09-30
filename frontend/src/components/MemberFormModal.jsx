@@ -159,14 +159,22 @@ export default function MemberFormModal({ isOpen, onClose, initialData = null })
       return;
     }
 
+    const payload = { ...formData };
+    if (payload.group === 'Unassigned') payload.group = '';
+    if (payload.birthDate) {
+      payload.birthDate = new Date(payload.birthDate).toISOString();
+    } else {
+      delete payload.birthDate;
+    }
+
     setIsSubmitting(true);
     try {
       let res;
       const memberId = initialData?.id || initialData?._id;
       if (memberId) {
-        res = await editMember(memberId, formData);
+        res = await editMember(memberId, payload);
       } else {
-        res = await addMember(formData);
+        res = await addMember(payload);
       }
       
       if (res?.duplicateWarning) {
