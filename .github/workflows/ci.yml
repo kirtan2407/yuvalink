@@ -12,6 +12,12 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      MONGODB_URI: "mongodb://localhost/test"
+      JWT_SECRET: "test-secret"
+      CORS_ORIGIN: "http://localhost:5173"
+      APP_TIMEZONE: "Asia/Kolkata"
+      PORT: "5000"
     defaults:
       run:
         working-directory: backend
