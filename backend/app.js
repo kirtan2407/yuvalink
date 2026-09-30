@@ -14,11 +14,13 @@ app.use(compression());
 app.use(cors({ origin: config.CORS_ORIGIN }));
 app.use(express.json({ limit: '1mb' }));
 
+// Rate limiter for everything except health check
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.path === '/api/health' || req.path === '/health',
 });
 app.use(limiter);
 

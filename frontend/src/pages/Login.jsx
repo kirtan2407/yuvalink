@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { apiCall } from '../services/api';
 
 export default function Login() {
   const [password, setPassword] = useState('');
@@ -22,24 +23,19 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const data = await apiCall('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        login(data.token);
-        navigate('/members', { replace: true });
-      } else if (res.status === 429) {
+      login(data.token);
+      navigate('/members', { replace: true });
+    } catch (err) {
+      if (err.message.includes('429')) {
         setError('Too many attempts. Please try again later.');
       } else {
-        const errData = await res.json();
-        setError(errData.message || 'Login failed');
+        setError(err.message || 'Login failed');
       }
-    } catch {
-      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }

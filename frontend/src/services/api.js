@@ -31,7 +31,9 @@ export async function apiCall(endpoint, options = {}, retries = 1) {
   try {
     const response = await fetchWithTimeout(url, {
       ...options,
-      headers
+      headers,
+      mode: 'cors',
+      credentials: 'omit'
     });
 
     if (response.status === 401) {

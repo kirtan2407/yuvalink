@@ -5,8 +5,8 @@ const config = require('./config/env');
 mongoose.connect(config.MONGODB_URI)
   .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(config.PORT, () => {
-      console.log(`Server listening on port ${config.PORT}`);
+    app.listen(config.PORT, '127.0.0.1', () => {
+      console.log(`Server listening on port ${config.PORT} (IPv4)`);
     });
   })
   .catch((err) => {
