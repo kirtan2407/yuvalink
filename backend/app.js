@@ -37,6 +37,9 @@ app.use('/api', (req, res, next) => {
   return requireAuth(req, res, next);
 });
 
+const attendanceRoutes = require('./routes/attendance');
+app.use('/api/attendance', attendanceRoutes);
+
 app.use('/', routes);
 
 app.use((req, res, next) => {

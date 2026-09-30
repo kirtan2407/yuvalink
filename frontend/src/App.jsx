@@ -9,9 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Members from './pages/Members';
 import Trash from './pages/Trash';
 
-// Placeholder Pages
-const Attendance = () => <div className="card"><h1>Attendance Page</h1></div>;
-const Report = () => <div className="card"><h1>Report Page</h1></div>;
+import Attendance from './pages/Attendance';
+import Report from './pages/Report';
 const Settings = () => <div className="card"><h1>Settings Page</h1></div>;
 
 function App() {
