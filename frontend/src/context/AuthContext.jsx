@@ -6,7 +6,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => sessionStorage.getItem('token'));
   const [isAuthenticated, setIsAuthenticated] = useState(!!token);
   const [loading, setLoading] = useState(!!token);
-  const [autoLogoutMinutes] = useState(30);
+  const [autoLogoutMinutes, setAutoLogoutMinutes] = useState(30);
 
   useEffect(() => {
     const verifyToken = async () => {
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout, isAuthenticated, loading, autoLogoutMinutes }}>
+    <AuthContext.Provider value={{ token, login, logout, isAuthenticated, loading, autoLogoutMinutes, setAutoLogoutMinutes }}>
       {children}
     </AuthContext.Provider>
   );

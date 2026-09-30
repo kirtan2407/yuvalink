@@ -159,4 +159,33 @@ router.get('/report', async (req, res, next) => {
   }
 });
 
+// GET /count?date=YYYY-MM-DD
+router.get('/count', async (req, res, next) => {
+  try {
+    const { date } = dateQuerySchema.parse(req.query);
+    const count = await Attendance.countDocuments({ date });
+    res.json({ count });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: err.errors[0].message, errors: err.errors });
+    }
+    next(err);
+  }
+});
+
+// DELETE /date/:date
+router.delete('/date/:date', async (req, res, next) => {
+  try {
+    // We can use the same dateQuerySchema, but the param is in req.params
+    const { date } = dateQuerySchema.parse({ date: req.params.date });
+    const result = await Attendance.deleteMany({ date });
+    res.json({ deletedCount: result.deletedCount });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: err.errors[0].message, errors: err.errors });
+    }
+    next(err);
+  }
+});
+
 module.exports = router;

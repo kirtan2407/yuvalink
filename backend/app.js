@@ -43,6 +43,18 @@ app.use('/api/attendance', attendanceRoutes);
 const importRoutes = require('./routes/import');
 app.use('/api/import', importRoutes);
 
+const societiesRoutes = require('./routes/societies');
+app.use('/api/societies', societiesRoutes);
+
+const settingsRoutes = require('./routes/settings');
+app.use('/api/settings', settingsRoutes);
+
+const backupRoutes = require('./routes/backup');
+app.use('/api/backup', backupRoutes);
+
+const birthdaysRoutes = require('./routes/birthdays');
+app.use('/api/birthdays', birthdaysRoutes);
+
 app.use('/', routes);
 
 app.use((req, res, next) => {

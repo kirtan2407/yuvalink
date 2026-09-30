@@ -11,7 +11,7 @@ import Trash from './pages/Trash';
 
 import Attendance from './pages/Attendance';
 import Report from './pages/Report';
-const Settings = () => <div className="card"><h1>Settings Page</h1></div>;
+import Settings from './pages/Settings';
 
 function App() {
   return (
