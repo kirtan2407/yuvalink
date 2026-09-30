@@ -22,6 +22,19 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+const authRoutes = require('./routes/auth');
+const requireAuth = require('./middleware/auth');
+
+app.use('/api/auth', authRoutes);
+
+// Protect all other /api/* except /api/health and /api/auth/*
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health' || req.path.startsWith('/auth/')) {
+    return next();
+  }
+  return requireAuth(req, res, next);
+});
+
 app.use('/', routes);
 
 app.use((req, res, next) => {
