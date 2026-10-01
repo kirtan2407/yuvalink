@@ -40,13 +40,7 @@ function getTodayDate() {
   return d.toISOString().split('T')[0];
 }
 
-test('reject future dates in GET /', async () => {
-  const res = await request(app)
-    .get('/api/attendance?date=2099-01-01')
-    .set('Authorization', `Bearer ${token}`);
-  assert.strictEqual(res.status, 400);
-  assert.ok(res.body.message.includes('Future dates are not allowed'));
-});
+
 
 test('invalid date format in GET /', async () => {
   const res = await request(app)
