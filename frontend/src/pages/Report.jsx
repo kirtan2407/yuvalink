@@ -1,3 +1,4 @@
+import apiCall from '../services/api';
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { useMembers } from '../context/MembersContext';
@@ -28,44 +29,15 @@ export default function Report() {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      // Mock API call to GET /api/attendance/report
-      // const res = await fetch(`/api/attendance/report?from=${fromDate}&to=${toDate}&group=${groupFilter}`);
-      // const data = await res.json();
-      console.log(`GET /api/attendance/report?from=${fromDate}&to=${toDate}&group=${groupFilter}`);
       
-      // Simulate data based on members
-      const activeMembers = members.filter(m => !m.deleted);
-      let filtered = [...activeMembers];
-      
+      let url = '/api/attendance/report?from=' + fromDate + '&to=' + toDate;
       if (groupFilter !== 'All') {
-        if (groupFilter === 'Unassigned') {
-          filtered = filtered.filter(m => !m.group || m.group === 'Unassigned');
-        } else {
-          filtered = filtered.filter(m => m.group === groupFilter);
-        }
+        let g = groupFilter === 'Unassigned' ? '' : groupFilter;
+        url += '&group=' + g;
       }
+      const data = await apiCall(url);
+      setReportData(data);
 
-      const mockData = filtered.map(m => {
-        const total = Math.floor(Math.random() * 10) + 5;
-        const present = Math.floor(Math.random() * total);
-        const absent = total - present;
-        const percentage = Math.round((present / total) * 100);
-        
-        return {
-          id: m._id || m.id,
-          name: m.name,
-          group: m.group || 'Unassigned',
-          mobile: m.mobile,
-          total,
-          present,
-          absent,
-          percentage
-        };
-      });
-      
-      // Sort by percentage desc
-      mockData.sort((a, b) => b.percentage - a.percentage);
-      setReportData(mockData);
     } catch (error) {
       console.error(error);
     } finally {

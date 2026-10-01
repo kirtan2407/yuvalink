@@ -1,3 +1,4 @@
+import apiCall from '../services/api';
 import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
@@ -34,13 +35,9 @@ export default function ImportMembers({ onImportComplete }) {
       const formData = new FormData();
       formData.append('file', file);
       
-      const res = await fetch('/api/import/preview', {
-        method: 'POST',
-        body: formData
-      });
       
-      if (!res.ok) throw new Error('Preview failed');
-      const data = await res.json();
+const data = await apiCall('/api/import/preview', { method: 'POST', body: formData });
+
       
       setPreview({
         ...data,
@@ -71,13 +68,15 @@ export default function ImportMembers({ onImportComplete }) {
         .filter(k => selectedDuplicates[k])
         .map(Number);
       
-      const res = await fetch('/api/import/commit', {
+      const commitRows = [
+        ...preview.validRows,
+        ...selectedDupeIndices.map(idx => preview.duplicates[idx])
+      ];
+
+      const res = await apiCall('/api/import/commit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          importToken: preview.token,
-          selectedDuplicates: selectedDupeIndices
-        })
+        body: JSON.stringify({ rows: commitRows })
       });
       
       if (!res.ok) throw new Error('Commit failed');
@@ -127,13 +126,13 @@ export default function ImportMembers({ onImportComplete }) {
       {preview && (
         <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fff', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}>
           <h3 style={{ marginTop: 0 }}>Import Preview ({preview.filename})</h3>
-          <p><strong>Valid rows:</strong> {preview.validCount || 0}</p>
-          <p><strong>Errors:</strong> {preview.errorCount || 0}</p>
+          <p><strong>Valid rows:</strong> {preview.validRows?.length || 0}</p>
+          <p><strong>Errors:</strong> {preview.errors?.length || 0}</p>
           
           {preview.errors && preview.errors.length > 0 && (
             <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.875rem', color: '#dc2626', marginBottom: '1rem' }}>
               <ul>
-                {preview.errors.map((e, i) => <li key={i}>Row {e.row}: {e.message}</li>)}
+                {preview.errors.map((e, i) => <li key={i}>Row {e.row}: {e.reason}</li>)}
               </ul>
             </div>
           )}

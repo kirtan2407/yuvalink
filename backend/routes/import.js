@@ -209,18 +209,7 @@ router.post('/commit', async (req, res, next) => {
       }
 
       // Check duplicates again
-      const existing = await Member.findOne({
-        isDeleted: { $ne: true },
-        $or: [
-          { mobile: data.mobile },
-          ...(data.birthDate ? [{ name: data.name, birthDate: new Date(data.birthDate) }] : [])
-        ]
-      });
-
-      if (existing) {
-        skipped++;
-        continue;
-      }
+      // Frontend handles duplicates filtering.
 
       const member = new Member({
         name: data.name,

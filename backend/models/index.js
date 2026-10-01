@@ -1,11 +1,6 @@
-const Member = require('./Member');
-const Attendance = require('./Attendance');
-const Society = require('./Society');
-const Setting = require('./Setting');
-
 module.exports = {
-  Member,
-  Attendance,
-  Society,
-  Setting
+  Member: require('./Member'),
+  Attendance: require('./Attendance'),
+  Society: require('./Society'),
+  Setting: require('./Setting'),
 };

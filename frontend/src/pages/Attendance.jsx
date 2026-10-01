@@ -1,3 +1,4 @@
+import apiCall from '../services/api';
 import { useState, useMemo, useEffect } from 'react';
 import { useMembers } from '../context/MembersContext';
 import { filterMembers } from '../utils/memberUtils';
@@ -21,13 +22,22 @@ export default function Attendance() {
   const [search, setSearch] = useState('');
   
   // Mock state for optimistic UI, normally we'd fetch this from the backend based on date
+  
   const [attendanceRecords, setAttendanceRecords] = useState({});
-
   useEffect(() => {
-    // In a real app, fetch attendance for `date` here
-    // For now, we mock fetching by resetting local state
-    // setAttendanceRecords({});
+    async function load() {
+      try {
+        const records = await apiCall('/api/attendance?date=' + date);
+        const map = {};
+        records.forEach(r => map[r.memberId] = r.status === 'P' ? 'Present' : 'Absent');
+        setAttendanceRecords(map);
+      } catch (err) {
+        console.error('Failed to fetch attendance', err);
+      }
+    }
+    load();
   }, [date]);
+
 
   const activeMembers = useMemo(() => members.filter(m => !m.deleted), [members]);
   
@@ -44,31 +54,57 @@ export default function Attendance() {
   const absentCount = filteredMembers.filter(m => attendanceRecords[m._id || m.id] === 'Absent').length;
   const unmarkedCount = filteredMembers.length - presentCount - absentCount;
 
+  
   const markAttendance = async (memberId, status) => {
-    // Optimistic UI
+    const backendStatus = status === 'Present' ? 'P' : 'A';
     setAttendanceRecords(prev => ({ ...prev, [memberId]: status }));
-    
     try {
-      // Mock API Call
-      // await apiCall('/api/attendance', { method: 'PUT', body: { date, memberId, status } });
-      console.log(`Optimistic API call: PUT /api/attendance - date: ${date}, member: ${memberId}, status: ${status}`);
+      if (status) {
+        await apiCall('/api/attendance', { method: 'PUT', body: JSON.stringify({ date, memberId, status: backendStatus }) });
+      } else {
+        // if null (unmarked), ideally we DELETE it, but backend doesn't have delete specific. We'll just leave it or backend doesn't support unmarking.
+      }
     } catch (e) {
+
       console.error(e);
       // Rollback on failure (simplified)
     }
   };
 
+  
   const markBulkAttendance = async (status) => {
+    const backendStatus = status === 'Present' ? 'P' : 'A';
     const updates = {};
+    const memberIds = [];
     filteredMembers.forEach(m => {
       updates[m._id || m.id] = status;
+      memberIds.push(m._id || m.id);
     });
     setAttendanceRecords(prev => ({ ...prev, ...updates }));
     
     try {
-      // Mock API Call
-      // await apiCall('/api/attendance/bulk', { method: 'POST', body: { date, updates } });
-      console.log(`Optimistic API call: POST /api/attendance/bulk - date: ${date}, status: ${status}`);
+      await apiCall('/api/attendance/bulk', { method: 'PUT', body: JSON.stringify({ date, memberIds, status: backendStatus }) });
+    } catch (e) {
+
+      console.error(e);
+    }
+  };
+
+  
+  const markUnmarkedAsAbsent = async () => {
+    const unmarkedMembers = filteredMembers.filter(m => !attendanceRecords[m._id || m.id]);
+    if (unmarkedMembers.length === 0) return;
+    
+    const updates = {};
+    const memberIds = [];
+    unmarkedMembers.forEach(m => {
+      updates[m._id || m.id] = 'Absent';
+      memberIds.push(m._id || m.id);
+    });
+    setAttendanceRecords(prev => ({ ...prev, ...updates }));
+    
+    try {
+      await apiCall('/api/attendance/bulk', { method: 'PUT', body: JSON.stringify({ date, memberIds, status: 'A' }) });
     } catch (e) {
       console.error(e);
     }
@@ -176,6 +212,7 @@ export default function Attendance() {
       <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem' }}>
         <button onClick={() => markBulkAttendance('Present')} style={{ ...btnPrimary, backgroundColor: '#10b981' }}>Mark All Present</button>
         <button onClick={() => markBulkAttendance('Absent')} style={{ ...btnPrimary, backgroundColor: '#ef4444' }}>Mark All Absent</button>
+        <button onClick={markUnmarkedAsAbsent} style={{ ...btnPrimary, backgroundColor: '#f59e0b' }}>Mark Unmarked as Absent</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
