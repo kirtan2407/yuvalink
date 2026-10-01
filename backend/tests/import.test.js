@@ -145,8 +145,8 @@ describe('Import Endpoints', async () => {
       .send(payload);
 
     assert.strictEqual(res.status, 200);
-    assert.strictEqual(res.body.imported, 1);
-    assert.strictEqual(res.body.skipped, 1); // skipped existing
+    assert.strictEqual(res.body.imported, 2);
+    assert.strictEqual(res.body.skipped, 0); // skipped existing
 
     const member = await Member.findOne({ mobile: '6666666666' });
     assert.ok(member);

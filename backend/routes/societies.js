@@ -43,7 +43,7 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const data = societySchema.parse(req.body);
-    const society = await Society.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
+    const society = await Society.findByIdAndUpdate(req.params.id, data, { returnDocument: 'after', runValidators: true });
     if (!society) {
       return res.status(404).json({ message: 'Society not found' });
     }

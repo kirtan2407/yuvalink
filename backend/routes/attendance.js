@@ -60,7 +60,7 @@ router.put('/', async (req, res, next) => {
     const record = await Attendance.findOneAndUpdate(
       { date, memberId },
       { status, markedAt: new Date() },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     
     res.json(record);
