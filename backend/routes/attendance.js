@@ -9,26 +9,24 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 // Zod schemas
 const dateQuerySchema = z.object({
-  date: z.string().regex(dateRegex, 'Invalid date format, use YYYY-MM-DD').refine((val) => {
-    return new Date(val) <= new Date();
-  }, 'Future dates are not allowed')
+  date: z.string().regex(dateRegex, 'Invalid date format, use YYYY-MM-DD')
 });
 
 const putSchema = z.object({
-  date: z.string().regex(dateRegex).refine(val => new Date(val) <= new Date(), 'Future dates are not allowed'),
+  date: z.string().regex(dateRegex),
   memberId: z.string().length(24),
   status: z.enum(['P', 'A'])
 });
 
 const putBulkSchema = z.object({
-  date: z.string().regex(dateRegex).refine(val => new Date(val) <= new Date(), 'Future dates are not allowed'),
+  date: z.string().regex(dateRegex),
   memberIds: z.array(z.string().length(24)),
   status: z.enum(['P', 'A'])
 });
 
 const reportQuerySchema = z.object({
-  from: z.string().regex(dateRegex).refine(val => new Date(val) <= new Date(), 'Future dates are not allowed'),
-  to: z.string().regex(dateRegex).refine(val => new Date(val) <= new Date(), 'Future dates are not allowed'),
+  from: z.string().regex(dateRegex),
+  to: z.string().regex(dateRegex),
   group: z.string().optional()
 }).refine(data => data.from <= data.to, {
   message: "'from' date must be before or equal to 'to' date",

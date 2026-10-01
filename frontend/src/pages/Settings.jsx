@@ -1,3 +1,4 @@
+import apiCall from '../services/api';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,9 +39,7 @@ const Settings = () => {
     setBirthdaysLoading(true);
     setBirthdaysError('');
     try {
-      const res = await fetch('/api/birthdays');
-      if (!res.ok) throw new Error('Failed to fetch birthdays');
-      const data = await res.json();
+      const data = await apiCall('/api/birthdays');
       setBirthdays(data);
     } catch (err) {
       setBirthdaysError(err.message);
@@ -53,9 +52,7 @@ const Settings = () => {
     setSocietiesLoading(true);
     setSocietiesError('');
     try {
-      const res = await fetch('/api/societies');
-      if (!res.ok) throw new Error('Failed to fetch societies');
-      const data = await res.json();
+      const data = await apiCall('/api/societies');
       setSocieties(data);
     } catch (err) {
       setSocietiesError(err.message);
@@ -76,9 +73,7 @@ const Settings = () => {
     setAttendanceLoading(true);
     setAttendanceError('');
     try {
-      const res = await fetch(`/api/attendance/count?date=${attendanceDate}`);
-      if (!res.ok) throw new Error('Failed to fetch count');
-      const data = await res.json();
+      const data = await apiCall(`/api/attendance/count?date=${attendanceDate}`);
       setAttendanceCount(data.count);
     } catch (err) {
       setAttendanceError(err.message);
@@ -91,8 +86,7 @@ const Settings = () => {
     if (!attendanceDate) return;
     setAttendanceLoading(true);
     try {
-      const res = await fetch(`/api/attendance/date/${attendanceDate}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete attendance');
+      await apiCall(`/api/attendance/date/${attendanceDate}`, { method: 'DELETE' });
       setAttendanceCount(null);
       setAttendanceDate('');
       alert('Attendance deleted successfully');
@@ -109,7 +103,7 @@ const Settings = () => {
     try {
       const url = editingSociety ? `/api/societies/${editingSociety.id}` : '/api/societies';
       const method = editingSociety ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await apiCall(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(societyForm)
@@ -128,8 +122,7 @@ const Settings = () => {
     if (!window.confirm('Delete this society?')) return;
     setSocietiesLoading(true);
     try {
-      const res = await fetch(`/api/societies/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete society');
+      await apiCall(`/api/societies/${id}`, { method: 'DELETE' });
       await fetchSocieties();
     } catch (err) {
       setSocietiesError(err.message);
@@ -142,7 +135,7 @@ const Settings = () => {
     if (!window.confirm('Are you sure you want to clear ALL society data?')) return;
     setSocietiesLoading(true);
     try {
-      const res = await fetch('/api/societies/all', {
+      const res = await apiCall('/api/societies/all', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirm: true })
@@ -161,7 +154,7 @@ const Settings = () => {
     setPasswordLoading(true);
     setPasswordMessage('');
     try {
-      const res = await fetch('/api/settings/password', {
+      const res = await apiCall('/api/settings/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(passwordForm)
@@ -181,7 +174,7 @@ const Settings = () => {
     setAutoLogoutLoading(true);
     setAutoLogoutMessage('');
     try {
-      const res = await fetch('/api/settings/autologout', {
+      const res = await apiCall('/api/settings/autologout', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ minutes: parseInt(autoLogoutForm, 10) })

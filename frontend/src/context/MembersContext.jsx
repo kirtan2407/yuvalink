@@ -29,24 +29,24 @@ function membersReducer(state, action) {
     case 'EDIT_MEMBER_OPTIMISTIC':
       return {
         ...state,
-        members: state.members.map(m => m.id === action.payload.id || m._id === action.payload.id ? action.payload : m)
+        members: state.members.map(m => (m._id || m.id) === (action.payload._id || action.payload.id) ? action.payload : m)
       };
     case 'DELETE_MEMBER_OPTIMISTIC':
       return {
         ...state,
-        members: state.members.filter(m => m.id !== action.payload.id && m._id !== action.payload.id),
+        members: state.members.filter(m => (m._id || m.id) !== (action.payload._id || action.payload.id)),
         trashMembers: [{ ...action.payload, deleted: true, deletedAt: new Date().toISOString() }, ...state.trashMembers]
       };
     case 'RESTORE_MEMBER_OPTIMISTIC':
       return {
         ...state,
-        trashMembers: state.trashMembers.filter(m => m.id !== action.payload.id && m._id !== action.payload.id),
+        trashMembers: state.trashMembers.filter(m => (m._id || m.id) !== (action.payload._id || action.payload.id)),
         members: [{ ...action.payload, deleted: false }, ...state.members]
       };
     case 'DELETE_PERMANENT_OPTIMISTIC':
       return {
         ...state,
-        trashMembers: state.trashMembers.filter(m => m.id !== action.payload.id && m._id !== action.payload.id)
+        trashMembers: state.trashMembers.filter(m => (m._id || m.id) !== (action.payload._id || action.payload.id))
       };
     case 'REVERT_STATE':
       return { ...state, members: action.payload.members, trashMembers: action.payload.trashMembers };

@@ -17,10 +17,14 @@ async function fetchWithTimeout(resource, options = {}) {
 
 export async function apiCall(endpoint, options = {}, retries = 1) {
   const token = sessionStorage.getItem('token');
+  
   const headers = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
+
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
